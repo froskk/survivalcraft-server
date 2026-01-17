@@ -1,0 +1,166 @@
+name: Survivalcraft Server 24/7 with playit.gg
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Reinicia o servidor a cada 6 horas para manter ele online
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  minecraft-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Create server directories
+      run: |
+        mkdir -p server
+        mkdir -p plugins
+        mkdir -p world
+        mkdir -p logs
+        mkdir -p config
+    
+    - name: Download Paper server
+      run: |
+        cd server
+        echo "Downloading Paper 1.21..."
+        curl -L -o paper-1.21.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar" || wget -O paper-1.21.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
+    
+    - name: Download Geyser plugin
+      run: |
+        mkdir -p plugins
+        echo "Downloading Geyser..."
+        curl -L -o plugins/Geyser-Spigot.jar "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/Geyser-Spigot.jar" || wget -O plugins/Geyser-Spigot.jar "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/Geyser-Spigot.jar"
+    
+    - name: Download Floodgate plugin
+      run: |
+        echo "Downloading Floodgate..."
+        curl -L -o plugins/floodgate-spigot.jar "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/floodgate-spigot.jar" || wget -O plugins/floodgate-spigot.jar "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/floodgate-spigot.jar"
+    
+    - name: Download HeadDrop plugin
+      run: |
+        echo "Downloading HeadDrop..."
+        curl -L -o plugins/HeadDrop.jar "https://hangar.papermc.io/vedokoush/HeadBounty/versions/latest/PAPER/download" || echo "HeadDrop download skipped"
+    
+    - name: Download LagFixer plugin
+      run: |
+        echo "Downloading LagFixer..."
+        curl -L -o plugins/LagFixer.jar "https://cdn.modrinth.com/data/Yd7qDQc7/versions/latest/download" || echo "LagFixer download skipped"
+    
+    - name: Copy configuration files
+      run: |
+        cp server.properties server/ || true
+        mkdir -p plugins/configs
+        cp geyser-config.yml plugins/configs/ || true
+        cp floodgate-config.yml plugins/configs/ || true
+        mkdir -p server/config
+        cp paper-global.yml server/config/ || true
+        cp ops.json server/ || true
+        cp whitelist.json server/ || true
+    
+    - name: Accept EULA
+      run: |
+        echo "eula=true" > server/eula.txt
+    
+    - name: Start Minecraft server in background
+      run: |
+        cd server
+        java -Xmx28G -Xms28G \
+          -XX:+UseG1GC \
+          -XX:MaxGCPauseMillis=200 \
+          -XX:+UnlockExperimentalVMOptions \
+          -XX:G1NewCollectionPercentage=30 \
+          -XX:G1MaxNewGenPercent=40 \
+          -XX:InitiatingHeapOccupancyPercent=35 \
+          -XX:+DisableExplicitGC \
+          -XX:+AlwaysPreTouch \
+          -XX:+ParallelRefProcEnabled \
+          -Dusing.aikars.flags=true \
+          -jar paper-1.21.jar nogui > /tmp/server.log 2>&1 &
+        
+        echo "Waiting for server to start..."
+        sleep 30
+    
+    - name: Setup playit.gg tunnel
+      run: |
+        # Download playit.gg client
+        echo "Downloading playit.gg client..."
+        curl -L -o playit "https://github.com/playit-cloud/playit-agent/releases/download/latest/playit-linux-x86_64" || wget -O playit "https://github.com/playit-cloud/playit-agent/releases/download/latest/playit-linux-x86_64"
+        chmod +x playit
+        
+        # Create playit directory
+        mkdir -p ~/.config/playit
+        
+        # Start tunnel in background with claim token
+        if [ ! -z "${{ secrets.PLAYIT_CLAIM_TOKEN }}" ]; then
+          echo "Starting playit.gg tunnel with claim token..."
+          ./playit --claim-token "${{ secrets.PLAYIT_CLAIM_TOKEN }}" > /tmp/playit.log 2>&1 &
+          PLAYIT_PID=$!
+          echo "playit.gg PID: $PLAYIT_PID"
+          
+          # Wait for tunnel to be ready
+          echo "Waiting for tunnel to be ready..."
+          sleep 15
+          
+          # Display tunnel info
+          echo "=== PLAYIT.GG TUNNEL INFO ==="
+          cat /tmp/playit.log || echo "No log available yet"
+          echo "============================="
+        else
+          echo "PLAYIT_CLAIM_TOKEN not set. Skipping playit.gg setup."
+          echo "To use playit.gg, add the PLAYIT_CLAIM_TOKEN secret to your repository."
+        fi
+    
+    - name: Display server connection info
+      run: |
+        echo "========================================="
+        echo "SURVIVALCRAFT SERVER ONLINE!"
+        echo "========================================="
+        echo ""
+        echo "Java Edition:"
+        echo "  Address: localhost:25565"
+        echo "  (or your public IP:25565 if port forwarded)"
+        echo ""
+        echo "Bedrock Edition:"
+        echo "  Address: localhost:19132"
+        echo "  (or your public IP:19132 if port forwarded)"
+        echo ""
+        echo "Server Mode: OFFLINE (sem autenticação)"
+        echo "Whitelist: DESATIVADA (qualquer um pode entrar)"
+        echo ""
+        echo "========================================="
+        echo "Checking server status..."
+        sleep 10
+        cat /tmp/server.log | tail -20 || echo "Server starting..."
+    
+    - name: Keep server running
+      run: |
+        # Keep the workflow running for 6 hours
+        echo "Server running... (keeping alive for 6 hours)"
+        sleep 21600
+    
+    - name: Upload server logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: server-logs
+        path: server/logs/
+        retention-days: 7
+    
+    - name: Upload world backup
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: world-backup
+        path: world/
+        retention-days: 30
