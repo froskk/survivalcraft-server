@@ -1,0 +1,206 @@
+name: Survivalcraft Server - Estável 24/7
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  minecraft-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Java 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Accept EULA
+      run: echo "eula=true" > eula.txt
+    
+    - name: Download Paper 1.21.1
+      run: |
+        echo "📥 Baixando Paper 1.21.1..."
+        curl -L -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
+        if [ -f paper.jar ]; then
+          echo "✅ Paper baixado com sucesso"
+          ls -lh paper.jar
+        else
+          echo "❌ Erro ao baixar Paper"
+          exit 1
+        fi
+    
+    - name: Create Plugins Directory
+      run: mkdir -p plugins
+    
+    - name: Create server.properties
+      run: |
+        cat > server.properties << 'EOF'
+        online-mode=false
+        server-port=25565
+        max-players=20
+        gamemode=survival
+        difficulty=normal
+        pvp=true
+        white-list=false
+        view-distance=10
+        simulation-distance=8
+        motd=\u00a76Survivalcraft - S\u00e3o Paulo, Brasil \u00a7e\u00a7lOFFLINE MODE
+        level-seed=
+        level-name=world
+        level-type=minecraft\:normal
+        allow-flight=false
+        spawn-protection=16
+        hardcore=false
+        ops-only=false
+        prevent-proxy-connections=false
+        enable-query=false
+        enable-rcon=false
+        sync-chunk-writes=true
+        network-compression-threshold=256
+        max-tick-time=60000
+        require-resource-pack=false
+        hide-online-players=false
+        enforce-secure-profile=false
+        previews-chat=false
+        use-native-transport=true
+        EOF
+        echo "✅ server.properties criado"
+    
+    - name: Create ops.json
+      run: |
+        cat > ops.json << 'EOF'
+        [
+          {
+            "uuid": "00000000-0000-0000-0000-000000000001",
+            "name": "N0vakt",
+            "level": 4,
+            "bypassesPlayerLimit": true
+          },
+          {
+            "uuid": "00000000-0000-0000-0000-000000000002",
+            "name": "froskk",
+            "level": 4,
+            "bypassesPlayerLimit": true
+          }
+        ]
+        EOF
+        echo "✅ ops.json criado"
+    
+    - name: Download ngrok
+      run: |
+        echo "📥 Baixando ngrok..."
+        curl -L -o ngrok.zip "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip"
+        unzip -o ngrok.zip
+        chmod +x ngrok
+        ./ngrok --version
+        echo "✅ ngrok baixado"
+    
+    - name: Start Minecraft Server with ngrok Tunnel
+      run: |
+        echo "🚀 Iniciando Servidor Minecraft Survivalcraft..."
+        
+        # Iniciar o servidor com JVM otimizado e estável
+        java -Xmx4G -Xms4G \
+          -XX:+UseG1GC \
+          -XX:MaxGCPauseMillis=200 \
+          -XX:+ParallelRefProcEnabled \
+          -jar paper.jar nogui > /tmp/server.log 2>&1 &
+        
+        SERVER_PID=$!
+        echo "🎮 Servidor iniciado com PID: $SERVER_PID"
+        
+        # Aguardar o servidor iniciar (máximo 120 segundos)
+        echo "⏳ Aguardando servidor iniciar..."
+        STARTED=0
+        for i in {1..120}; do
+          if grep -q "Done (.*s)! For help, type" /tmp/server.log 2>/dev/null; then
+            echo "✅ Servidor iniciou com sucesso!"
+            STARTED=1
+            break
+          fi
+          if [ $((i % 20)) -eq 0 ]; then
+            echo "   Tentativa $i/120..."
+          fi
+          sleep 1
+        done
+        
+        if [ $STARTED -eq 0 ]; then
+          echo "❌ Servidor não iniciou a tempo"
+          echo "=== ÚLTIMOS LOGS DO SERVIDOR ==="
+          tail -50 /tmp/server.log
+          echo "================================"
+          exit 1
+        fi
+        
+        # Iniciar ngrok tunnel para Java (porta 25565)
+        echo ""
+        echo "🌐 Iniciando túnel ngrok para Java Edition..."
+        ./ngrok tcp 25565 --log=stdout > /tmp/ngrok.log 2>&1 &
+        NGROK_PID=$!
+        echo "🌐 ngrok iniciado com PID: $NGROK_PID"
+        
+        # Aguardar ngrok iniciar
+        sleep 8
+        
+        # Tentar obter o endereço do ngrok via API
+        NGROK_URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | grep -o '"public_url":"[^"]*"' | head -1 | cut -d'"' -f4)
+        
+        if [ -z "$NGROK_URL" ]; then
+          echo "⚠️  Tentando obter URL dos logs do ngrok..."
+          NGROK_URL=$(grep -o "tcp://[^ ]*" /tmp/ngrok.log | head -1)
+        fi
+        
+        # Extrair host e porta
+        if [[ $NGROK_URL == tcp://* ]]; then
+          NGROK_HOST=$(echo $NGROK_URL | sed 's|tcp://||' | cut -d: -f1)
+          NGROK_PORT=$(echo $NGROK_URL | sed 's|tcp://||' | cut -d: -f2)
+        else
+          NGROK_HOST="localhost"
+          NGROK_PORT="25565"
+        fi
+        
+        # Mostrar informações
+        echo ""
+        echo "╔════════════════════════════════════════════════════════╗"
+        echo "║   ✅ SERVIDOR SURVIVALCRAFT ONLINE! ✅                ║"
+        echo "╠════════════════════════════════════════════════════════╣"
+        echo "║ 🌍 Localização: São Paulo, Brasil                     ║"
+        echo "║ 📱 Versão: Paper 1.21.1 (SEM MODS DE LAG)             ║"
+        echo "║ 🎯 Modo: Offline (Pirata - sem autenticação)          ║"
+        echo "║ 👥 Máximo de Jogadores: 20                            ║"
+        echo "║ ✨ Configuração: Estável e Otimizada                  ║"
+        echo "╠════════════════════════════════════════════════════════╣"
+        echo "║ 🔌 ENDEREÇO PARA CONECTAR (Java Edition):             ║"
+        echo "║    Host: $NGROK_HOST                                    ║"
+        echo "║    Porta: $NGROK_PORT                                   ║"
+        echo "║    Endereço Curto: survivalcraft.freemyip.com          ║"
+        echo "╠════════════════════════════════════════════════════════╣"
+        echo "║ 👑 Donos: N0vakt e froskk                             ║"
+        echo "╚════════════════════════════════════════════════════════╝"
+        echo ""
+        echo "📍 Servidor aguardando conexões por 6 horas..."
+        echo "🔗 Endereço ngrok: $NGROK_URL"
+        echo ""
+        
+        # Mostrar logs do servidor a cada minuto
+        for i in {1..360}; do
+          sleep 60
+          echo "[$(date)] Servidor rodando... (minuto $i/360)"
+          tail -3 /tmp/server.log
+        done
+        
+        # Parar o servidor
+        echo ""
+        echo "🛑 Parando servidor..."
+        kill $SERVER_PID 2>/dev/null || true
+        kill $NGROK_PID 2>/dev/null || true
+        wait $SERVER_PID 2>/dev/null || true
+        wait $NGROK_PID 2>/dev/null || true
+        echo "✅ Servidor parado. Workflow será reiniciado em 6 horas."

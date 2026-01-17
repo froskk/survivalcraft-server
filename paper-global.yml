@@ -1,126 +1,70 @@
-# Paper Global Configuration
-# For more information, visit https://docs.papermc.io/
+# Paper Global Configuration - Survivalcraft
+# Configuração simplificada para estabilidade máxima
 
 # Chunk loading
 chunk-loading:
-  # Chunks per tick
-  chunks-per-tick: 4
-  # Max concurrent chunk loads
+  chunks-per-tick: 6
   max-concurrent-chunk-loads: 8
-  # Async chunk loading
   async-chunk-loading: true
 
 # Entity performance
 entity-performance:
-  # Enable entity activation range optimization
   enable-activation-range: true
-  # Activation range for monsters
-  activation-range-monsters: 32
-  # Activation range for animals
-  activation-range-animals: 32
-  # Activation range for raiders
-  activation-range-raiders: 48
-  # Activation range for other entities
-  activation-range-other: 16
-  # Activation range for water creatures
-  activation-range-water-creatures: 16
-  # Activation range for flying mobs
-  activation-range-flying-mobs: 32
-  # Activation range for tick inactive villagers
+  activation-range-monsters: 48
+  activation-range-animals: 48
+  activation-range-raiders: 64
+  activation-range-other: 32
+  activation-range-water-creatures: 32
+  activation-range-flying-mobs: 48
   tick-inactive-villagers: false
 
 # Tick settings
 tick-settings:
-  # Ticks per second
   ticks-per-second: 20
-  # Max chunk unload per tick
-  max-chunk-unload-per-tick: 1
-  # Delay chunk unloads
+  max-chunk-unload-per-tick: 2
   delay-chunk-unloads-by: 1000
 
-# Optimization settings
+# Optimization settings (CONSERVATIVE)
 optimization:
-  # Disable mob spawning
   disable-mob-spawning: false
-  # Disable weather
   disable-weather: false
-  # Disable thunder
   disable-thunder: false
-  # Disable lightning
   disable-lightning: false
-  # Reduce projectile lag
-  reduce-projectile-lag: true
-  # Reduce entity lag
-  reduce-entity-lag: true
-  # Reduce item lag
-  reduce-item-lag: true
-  # Reduce mob lag
-  reduce-mob-lag: true
-  # Reduce block lag
-  reduce-block-lag: true
+  reduce-projectile-lag: false
+  reduce-entity-lag: false
+  reduce-item-lag: false
+  reduce-mob-lag: false
+  reduce-block-lag: false
 
 # Network settings
 network:
-  # Compression threshold
   compression-threshold: 256
-  # Packet compression
   packet-compression: true
-  # Network threads
   network-threads: 4
-  # Max connections
   max-connections: 100
 
 # World settings
 world:
-  # Spawn protection
   spawn-protection: 16
-  # View distance
   view-distance: 10
-  # Simulation distance
   simulation-distance: 8
-  # Entity broadcast range percentage
   entity-broadcast-range-percentage: 100
 
 # Performance monitoring
 performance-monitoring:
-  # Enable performance monitoring
-  enabled: true
-  # Monitoring interval (ticks)
+  enabled: false
   interval: 100
-  # Log performance warnings
-  log-warnings: true
+  log-warnings: false
 
 # Async operations
 async-operations:
-  # Enable async chunk loading
   async-chunk-loading: true
-  # Enable async entity loading
-  async-entity-loading: true
-  # Enable async block loading
-  async-block-loading: true
+  async-entity-loading: false
+  async-block-loading: false
 
 # Cache settings
 cache:
-  # Enable chunk cache
   enable-chunk-cache: true
-  # Chunk cache size
-  chunk-cache-size: 1024
-  # Enable entity cache
+  chunk-cache-size: 512
   enable-entity-cache: true
-  # Entity cache size
-  entity-cache-size: 512
-
-# Lag reduction
-lag-reduction:
-  # Reduce lag from mobs
-  reduce-mob-lag: true
-  # Reduce lag from items
-  reduce-item-lag: true
-  # Reduce lag from projectiles
-  reduce-projectile-lag: true
-  # Reduce lag from redstone
-  reduce-redstone-lag: true
-  # Reduce lag from explosions
-  reduce-explosion-lag: true
-  # Reduce lag from particles
-  reduce-particle-lag: true
+  entity-cache-size: 256
