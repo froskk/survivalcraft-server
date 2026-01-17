@@ -1,0 +1,245 @@
+name: Survivalcraft Server 24/7 - São Paulo Brasil
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Reinicia a cada 6 horas para manter online
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  minecraft-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Accept EULA
+      run: echo "eula=true" > eula.txt
+    
+    - name: Download Paper server (Latest 1.21.1)
+      run: |
+        echo "Baixando Paper 1.21.1..."
+        curl -L -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
+        ls -lh paper.jar
+    
+    - name: Download Plugins (Geyser + Floodgate)
+      run: |
+        mkdir -p plugins
+        echo "Baixando Geyser..."
+        curl -L -o plugins/Geyser-Spigot.jar "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/Geyser-Spigot.jar" || echo "Geyser download falhou"
+        
+        echo "Baixando Floodgate..."
+        curl -L -o plugins/floodgate-spigot.jar "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/floodgate-spigot.jar" || echo "Floodgate download falhou"
+        
+        ls -lh plugins/ || echo "Pasta plugins vazia"
+    
+    - name: Create server.properties (Otimizado para Brasil)
+      run: |
+        cat > server.properties << 'EOF'
+        # Survivalcraft Server - São Paulo, Brasil
+        # Configurado para melhor performance em conexões brasileiras
+        
+        # Modo offline (sem autenticação)
+        online-mode=false
+        
+        # Porta do servidor
+        server-port=25565
+        
+        # Máximo de jogadores
+        max-players=20
+        
+        # Modo de jogo
+        gamemode=survival
+        
+        # Dificuldade
+        difficulty=normal
+        
+        # PvP ativado
+        pvp=true
+        
+        # Whitelist desativada (qualquer um pode entrar)
+        white-list=false
+        
+        # Distância de visualização (reduzida para melhor performance)
+        view-distance=10
+        
+        # Distância de simulação
+        simulation-distance=8
+        
+        # Motd (Mensagem do dia)
+        motd=\u00a76Survivalcraft - S\u00e3o Paulo, Brasil \u00a7e\u00a7lOFFLINE MODE
+        
+        # Seed do mundo (deixar em branco para aleatório)
+        level-seed=
+        
+        # Nome do mundo
+        level-name=world
+        
+        # Tipo de mundo
+        level-type=minecraft\:normal
+        
+        # Permitir voo
+        allow-flight=false
+        
+        # Spawn protection
+        spawn-protection=16
+        
+        # Modo hardcore
+        hardcore=false
+        
+        # Ops apenas
+        ops-only=false
+        
+        # Prevent proxy connections
+        prevent-proxy-connections=false
+        
+        # Enable query
+        enable-query=false
+        
+        # Query port
+        query.port=25565
+        
+        # Enable rcon
+        enable-rcon=false
+        
+        # Rcon port
+        rcon.port=25575
+        
+        # Rcon password
+        rcon.password=
+        
+        # Sync chunk writes
+        sync-chunk-writes=true
+        
+        # Network compression threshold
+        network-compression-threshold=256
+        
+        # Max tick time
+        max-tick-time=60000
+        
+        # Require resource pack
+        require-resource-pack=false
+        
+        # Resource pack sha1
+        resource-pack-sha1=
+        
+        # Resource pack
+        resource-pack=
+        
+        # Hide online players
+        hide-online-players=false
+        
+        # Enforce secure profile
+        enforce-secure-profile=false
+        
+        # Previews chat
+        previews-chat=false
+        
+        # Use native transport
+        use-native-transport=true
+        EOF
+        
+        cat server.properties
+    
+    - name: Create ops.json (N0vakt como OP)
+      run: |
+        cat > ops.json << 'EOF'
+        [
+          {
+            "uuid": "00000000-0000-0000-0000-000000000001",
+            "name": "N0vakt",
+            "level": 4,
+            "bypassesPlayerLimit": true
+          },
+          {
+            "uuid": "00000000-0000-0000-0000-000000000002",
+            "name": "froskk",
+            "level": 4,
+            "bypassesPlayerLimit": true
+          }
+        ]
+        EOF
+        
+        cat ops.json
+    
+    - name: Start Minecraft Server (Otimizado para Brasil)
+      run: |
+        # JVM Flags otimizadas para melhor performance
+        # G1GC com configurações de Aikar para servidores pequenos
+        java -Xmx7G -Xms7G \
+          -XX:+UseG1GC \
+          -XX:MaxGCPauseMillis=200 \
+          -XX:+UnlockExperimentalVMOptions \
+          -XX:G1NewCollectionPercentage=30 \
+          -XX:G1MaxNewGenPercent=40 \
+          -XX:InitiatingHeapOccupancyPercent=35 \
+          -XX:+DisableExplicitGC \
+          -XX:+AlwaysPreTouch \
+          -XX:+ParallelRefProcEnabled \
+          -Dusing.aikars.flags=true \
+          -jar paper.jar nogui > /tmp/server.log 2>&1 &
+        
+        SERVER_PID=$!
+        echo "Servidor iniciado com PID: $SERVER_PID"
+        
+        # Aguardar o servidor iniciar (até 2 minutos)
+        echo "Aguardando servidor iniciar..."
+        for i in {1..120}; do
+          if grep -q "Done (.*s)! For help, type" /tmp/server.log 2>/dev/null; then
+            echo "✅ Servidor iniciou com sucesso!"
+            break
+          fi
+          echo "Tentativa $i/120..."
+          sleep 1
+        done
+        
+        # Mostrar logs
+        echo ""
+        echo "=== LOGS DO SERVIDOR ==="
+        tail -n 50 /tmp/server.log
+        echo "======================="
+        echo ""
+        echo "📍 SERVIDOR SURVIVALCRAFT ONLINE!"
+        echo "🌍 Localização: São Paulo, Brasil"
+        echo "📱 Versão: 1.21.1 (Paper)"
+        echo "🎮 Modo: Offline (Pirata)"
+        echo "👥 Máximo de Jogadores: 20"
+        echo "🔌 Porta Java: 25565"
+        echo "🔌 Porta Bedrock: 19132"
+        echo ""
+        echo "Aguardando conexões por 6 horas..."
+        
+        # Manter o workflow rodando por 6 horas
+        sleep 21600
+        
+        # Parar o servidor
+        echo ""
+        echo "Parando servidor..."
+        kill $SERVER_PID 2>/dev/null || true
+        wait $SERVER_PID 2>/dev/null || true
+        echo "Servidor parado. Workflow será reiniciado em 6 horas."
+    
+    - name: Upload Server Logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: server-logs-${{ github.run_id }}
+        path: /tmp/server.log
+        retention-days: 7
+    
+    - name: Upload World Backup
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: world-backup-${{ github.run_id }}
+        path: world/
+        retention-days: 30
