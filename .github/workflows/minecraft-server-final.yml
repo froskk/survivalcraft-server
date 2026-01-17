@@ -1,0 +1,163 @@
+name: Survivalcraft Server 24/7 - FINAL
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  minecraft-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Java 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Accept EULA
+      run: echo "eula=true" > eula.txt
+    
+    - name: Download Paper 1.21.1
+      run: |
+        echo "📥 Baixando Paper 1.21.1..."
+        curl -L -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
+        if [ -f paper.jar ]; then
+          echo "✅ Paper baixado com sucesso"
+          ls -lh paper.jar
+        else
+          echo "❌ Erro ao baixar Paper"
+          exit 1
+        fi
+    
+    - name: Create Plugins Directory
+      run: mkdir -p plugins
+    
+    - name: Create server.properties
+      run: |
+        cat > server.properties << 'EOF'
+        online-mode=false
+        server-port=25565
+        max-players=20
+        gamemode=survival
+        difficulty=normal
+        pvp=true
+        white-list=false
+        view-distance=10
+        simulation-distance=8
+        motd=\u00a76Survivalcraft - S\u00e3o Paulo, Brasil \u00a7e\u00a7lOFFLINE MODE
+        level-seed=
+        level-name=world
+        level-type=minecraft\:normal
+        allow-flight=false
+        spawn-protection=16
+        hardcore=false
+        ops-only=false
+        prevent-proxy-connections=false
+        enable-query=false
+        enable-rcon=false
+        sync-chunk-writes=true
+        network-compression-threshold=256
+        max-tick-time=60000
+        require-resource-pack=false
+        hide-online-players=false
+        enforce-secure-profile=false
+        previews-chat=false
+        use-native-transport=true
+        EOF
+        echo "✅ server.properties criado"
+    
+    - name: Create ops.json
+      run: |
+        cat > ops.json << 'EOF'
+        [
+          {
+            "uuid": "00000000-0000-0000-0000-000000000001",
+            "name": "N0vakt",
+            "level": 4,
+            "bypassesPlayerLimit": true
+          },
+          {
+            "uuid": "00000000-0000-0000-0000-000000000002",
+            "name": "froskk",
+            "level": 4,
+            "bypassesPlayerLimit": true
+          }
+        ]
+        EOF
+        echo "✅ ops.json criado"
+    
+    - name: Start Minecraft Server
+      run: |
+        echo "🚀 Iniciando Servidor Minecraft Survivalcraft..."
+        
+        # JVM Flags simples e comprovadas para Java 21
+        java -Xmx7G -Xms7G \
+          -XX:+UseG1GC \
+          -XX:MaxGCPauseMillis=200 \
+          -XX:+ParallelRefProcEnabled \
+          -XX:+UnlockDiagnosticVMOptions \
+          -XX:G1SummarizeRSetStatsPeriod=1 \
+          -jar paper.jar nogui > /tmp/server.log 2>&1 &
+        
+        SERVER_PID=$!
+        echo "🎮 Servidor iniciado com PID: $SERVER_PID"
+        
+        # Aguardar o servidor iniciar (até 2 minutos)
+        echo "⏳ Aguardando servidor iniciar..."
+        STARTED=0
+        for i in {1..120}; do
+          if grep -q "Done (.*s)! For help, type" /tmp/server.log 2>/dev/null; then
+            echo "✅ Servidor iniciou com sucesso!"
+            STARTED=1
+            break
+          fi
+          if [ $((i % 20)) -eq 0 ]; then
+            echo "   Tentativa $i/120..."
+          fi
+          sleep 1
+        done
+        
+        if [ $STARTED -eq 0 ]; then
+          echo "❌ Servidor não iniciou a tempo"
+          echo "=== LOGS DO SERVIDOR ==="
+          cat /tmp/server.log
+          echo "========================"
+          exit 1
+        fi
+        
+        # Mostrar informações
+        echo ""
+        echo "╔════════════════════════════════════════════════════════╗"
+        echo "║   ✅ SERVIDOR SURVIVALCRAFT ONLINE! ✅                ║"
+        echo "╠════════════════════════════════════════════════════════╣"
+        echo "║ 🌍 Localização: São Paulo, Brasil                     ║"
+        echo "║ 📱 Versão: Paper 1.21.1                               ║"
+        echo "║ 🎯 Modo: Offline (Pirata - sem autenticação)          ║"
+        echo "║ 👥 Máximo de Jogadores: 20                            ║"
+        echo "║ 🔌 Porta Java: 25565                                  ║"
+        echo "║ 🔌 Porta Bedrock: 19132                               ║"
+        echo "║ 👑 Donos: N0vakt e froskk                             ║"
+        echo "╠════════════════════════════════════════════════════════╣"
+        echo "║ ÚLTIMOS LOGS DO SERVIDOR:                             ║"
+        echo "╚════════════════════════════════════════════════════════╝"
+        tail -n 20 /tmp/server.log
+        echo ""
+        echo "📍 Servidor aguardando conexões por 6 horas..."
+        echo ""
+        
+        # Manter o servidor rodando por 6 horas
+        sleep 21600
+        
+        # Parar o servidor
+        echo ""
+        echo "🛑 Parando servidor..."
+        kill $SERVER_PID 2>/dev/null || true
+        wait $SERVER_PID 2>/dev/null || true
+        echo "✅ Servidor parado. Workflow será reiniciado em 6 horas."
