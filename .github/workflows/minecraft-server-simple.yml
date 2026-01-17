@@ -1,0 +1,54 @@
+name: Survivalcraft Server 24/7 Simple
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  minecraft-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Accept EULA
+      run: echo "eula=true" > eula.txt
+    
+    - name: Download Paper server
+      run: |
+        curl -L -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
+    
+    - name: Download Plugins
+      run: |
+        mkdir -p plugins
+        curl -L -o plugins/Geyser-Spigot.jar "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/Geyser-Spigot.jar"
+        curl -L -o plugins/floodgate-spigot.jar "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/floodgate-spigot.jar"
+    
+    - name: Start Server
+      run: |
+        # Iniciar o servidor em background
+        java -Xmx7G -Xms7G -jar paper.jar nogui &
+        
+        # Esperar o servidor iniciar
+        echo "Aguardando o servidor iniciar..."
+        sleep 60
+        
+        # Mostrar logs iniciais
+        tail -n 50 logs/latest.log || echo "Servidor iniciando..."
+        
+        # Manter o workflow rodando por 6 horas
+        echo "Servidor Survivalcraft está ONLINE!"
+        echo "Modo: Offline (Pirata)"
+        echo "Versão: 1.21.1"
+        echo "Aguardando conexões..."
+        sleep 21600
