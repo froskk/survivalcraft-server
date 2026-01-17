@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survivalcraft - Servidor Minecraft</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: #2a5298;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .server-info {
+            background: #f5f5f5;
+            border-left: 5px solid #2a5298;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: left;
+        }
+        .server-info h2 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .info-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #2a5298;
+        }
+        .info-value {
+            color: #333;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .copy-btn {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+        .copy-btn:hover {
+            background: #1e3c72;
+        }
+        .status {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .features {
+            text-align: left;
+            margin: 20px 0;
+        }
+        .features h3 {
+            color: #2a5298;
+            margin-bottom: 10px;
+        }
+        .features ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        .features li {
+            padding: 8px 0;
+            color: #333;
+        }
+        .features li:before {
+            content: "✓ ";
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Survivalcraft</h1>
+        <p class="subtitle">Servidor Minecraft - São Paulo, Brasil</p>
+        
+        <div class="status">✅ ONLINE E FUNCIONANDO</div>
+        
+        <div class="server-info">
+            <h2>📍 Informações de Conexão</h2>
+            
+            <div class="info-item">
+                <span class="info-label">Java Edition:</span><br>
+                <span class="info-value">25565-i3fdnmnhbbwxs2fjqfzn6-4a7ed103.us1.manus.computer:25565</span>
+                <button class="copy-btn" onclick="copyToClipboard('25565-i3fdnmnhbbwxs2fjqfzn6-4a7ed103.us1.manus.computer:25565')">Copiar</button>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Bedrock Edition:</span><br>
+                <span class="info-value">25565-i3fdnmnhbbwxs2fjqfzn6-4a7ed103.us1.manus.computer:19132</span>
+                <button class="copy-btn" onclick="copyToClipboard('25565-i3fdnmnhbbwxs2fjqfzn6-4a7ed103.us1.manus.computer:19132')">Copiar</button>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h3>✨ Características</h3>
+            <ul>
+                <li>Modo Offline (Aceita Minecraft pirata e original)</li>
+                <li>Crossplay Java + Bedrock</li>
+                <li>Sem mods de lag - Estável</li>
+                <li>PvP Ativado</li>
+                <li>Máximo 20 jogadores</li>
+                <li>Donos: N0vakt e froskk</li>
+            </ul>
+        </div>
+        
+        <div class="server-info">
+            <h2>📊 Especificações</h2>
+            <div class="info-item">
+                <span class="info-label">Versão:</span> <span class="info-value">Paper 1.21.1</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Modo:</span> <span class="info-value">Survival</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Dificuldade:</span> <span class="info-value">Normal</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Localização:</span> <span class="info-value">São Paulo, Brasil 🇧🇷</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Endereço copiado para a área de transferência!');
+            });
+        }
+    </script>
+</body>
+</html>
