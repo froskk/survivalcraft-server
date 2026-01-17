@@ -1,0 +1,96 @@
+# Floodgate Configuration
+# This is the configuration file for Floodgate
+# For more information, visit https://wiki.geysermc.org/floodgate/
+
+# Whether Floodgate is enabled
+enabled: true
+
+# The authentication type
+auth-type: floodgate
+
+# Bedrock player username prefix
+username-prefix: ""
+
+# Whether to replace the username with the Bedrock username
+replace-username: false
+
+# Whether to use the Bedrock player's UUID
+use-bedrock-uuid: true
+
+# Whether to require Bedrock players to be authenticated
+require-authentication: false
+
+# The maximum number of login attempts
+max-login-attempts: 3
+
+# The login timeout in seconds
+login-timeout: 30
+
+# Whether to allow Bedrock players to change their username
+allow-username-change: false
+
+# Whether to kick players on authentication failure
+kick-on-auth-failure: true
+
+# Whether to show the authentication screen to Bedrock players
+show-auth-screen: false
+
+# The authentication server URL
+auth-server-url: ""
+
+# The authentication server port
+auth-server-port: 8080
+
+# Whether to use SSL/TLS for authentication
+use-ssl: false
+
+# The SSL/TLS certificate path
+ssl-certificate-path: ""
+
+# The SSL/TLS key path
+ssl-key-path: ""
+
+# Whether to verify the SSL/TLS certificate
+verify-ssl: true
+
+# The maximum number of concurrent authentication requests
+max-concurrent-auth-requests: 10
+
+# Whether to cache authentication tokens
+cache-auth-tokens: true
+
+# The authentication token cache timeout in seconds
+auth-token-cache-timeout: 3600
+
+# Whether to log authentication attempts
+log-auth-attempts: true
+
+# The authentication log file path
+auth-log-file: "logs/auth.log"
+
+# Whether to allow Bedrock players to use commands
+allow-commands: true
+
+# Whether to allow Bedrock players to use chat
+allow-chat: true
+
+# Whether to allow Bedrock players to use emotes
+allow-emotes: true
+
+# Whether to show Bedrock players in the tab list
+show-in-tab-list: true
+
+# Whether to show Bedrock player names with a prefix
+show-bedrock-prefix: false
+
+# The prefix for Bedrock player names
+bedrock-prefix: "[BE]"
+
+# Whether to use the Bedrock player's skin
+use-bedrock-skin: true
+
+# Whether to allow Bedrock players to use custom skins
+allow-custom-skins: true
+
+# Whether to verify Bedrock player skins
+verify-skins: false

@@ -1,0 +1,95 @@
+# Geyser Configuration
+# This is the configuration file for Geyser
+# For more information, visit https://wiki.geysermc.org/
+
+bedrock:
+  # The IP address that will listen for Bedrock connections
+  # This should be 0.0.0.0 to listen on all interfaces
+  address: 0.0.0.0
+  # The port that will listen for Bedrock connections
+  port: 19132
+  # Whether to use IPv6
+  use-ipv6: false
+
+# The remote Java server information
+remote:
+  # The IP address of the remote Java server
+  address: localhost
+  # The port of the remote Java server
+  port: 25565
+
+# Floodgate settings (for authentication)
+floodgate:
+  # Whether to use Floodgate for authentication
+  enabled: true
+
+# General settings
+general:
+  # The authentication type
+  auth-type: floodgate
+  # Whether to allow third-party authentication
+  allow-third-party: false
+  # The number of threads to use for the connection pool
+  thread-pool-size: 32
+  # Whether to show coordinates to Bedrock players
+  show-coordinates: true
+  # Whether to show debug info
+  debug: false
+  # Whether to log player IPs
+  log-player-ips: true
+  # The default game mode for Bedrock players
+  default-gamemode: 0
+  # Whether to allow Bedrock players to use commands
+  allow-commands: true
+  # Whether to allow Bedrock players to use emotes
+  allow-emotes: true
+  # Whether to show emotes to Java players
+  emote-offhand-workaround: "disabled"
+
+# Metrics
+metrics:
+  # Whether to send metrics to Bstats
+  enabled: true
+  # The UUID for metrics
+  uuid: ""
+
+# Saved user logins
+saved-user-logins:
+  # Whether to save user logins
+  enabled: true
+  # The directory to save user logins
+  directory: "saved-user-logins"
+
+# Bedrock player settings
+bedrock-players:
+  # Whether to show Bedrock player names with the [BE] prefix
+  show-bedrock-prefix: false
+  # Whether to show Bedrock players in the tab list
+  show-bedrock-in-tab-list: true
+
+# Chunk loading settings
+chunk-loading:
+  # The number of chunks to load per tick
+  chunks-per-tick: 4
+  # The maximum number of chunks to load at once
+  max-chunks-per-load: 64
+
+# Performance settings
+performance:
+  # Whether to cache chunks
+  cache-chunks: true
+  # The maximum number of cached chunks
+  max-cached-chunks: 1024
+  # Whether to use async chunk loading
+  async-chunk-loading: true
+
+# Advanced settings
+advanced:
+  # Whether to use the Java server's difficulty setting
+  use-java-difficulty: true
+  # Whether to use the Java server's gamemode setting
+  use-java-gamemode: true
+  # Whether to use the Java server's PvP setting
+  use-java-pvp: true
+  # Whether to use the Java server's spawn protection
+  use-java-spawn-protection: true

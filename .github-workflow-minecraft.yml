@@ -1,0 +1,132 @@
+name: Survivalcraft Server 24/7
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Reinicia o servidor a cada 6 horas para manter ele online
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  minecraft-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 horas
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Create server directories
+      run: |
+        mkdir -p server
+        mkdir -p plugins
+        mkdir -p world
+        mkdir -p logs
+        mkdir -p config
+    
+    - name: Download Paper server
+      run: |
+        cd server
+        if [ ! -f "paper-1.21.jar" ]; then
+          echo "Downloading Paper 1.21..."
+          curl -L -o paper-1.21.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
+        fi
+    
+    - name: Download Geyser plugin
+      run: |
+        if [ ! -f "plugins/Geyser-Spigot.jar" ]; then
+          echo "Downloading Geyser..."
+          curl -L -o plugins/Geyser-Spigot.jar "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/Geyser-Spigot.jar"
+        fi
+    
+    - name: Download Floodgate plugin
+      run: |
+        if [ ! -f "plugins/floodgate-spigot.jar" ]; then
+          echo "Downloading Floodgate..."
+          curl -L -o plugins/floodgate-spigot.jar "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/floodgate-spigot.jar"
+        fi
+    
+    - name: Download HeadDrop plugin
+      run: |
+        if [ ! -f "plugins/HeadDrop.jar" ]; then
+          echo "Downloading HeadDrop..."
+          curl -L -o plugins/HeadDrop.jar "https://hangar.papermc.io/vedokoush/HeadBounty/versions/latest/PAPER/download" || echo "HeadDrop download failed"
+        fi
+    
+    - name: Download LagFixer plugin
+      run: |
+        if [ ! -f "plugins/LagFixer.jar" ]; then
+          echo "Downloading LagFixer..."
+          curl -L -o plugins/LagFixer.jar "https://cdn.modrinth.com/data/Yd7qDQc7/versions/latest/download" || echo "LagFixer download failed"
+        fi
+    
+    - name: Copy configuration files
+      run: |
+        cp server.properties server/ || true
+        cp geyser-config.yml plugins/ || true
+        cp floodgate-config.yml plugins/ || true
+        cp paper-global.yml config/ || true
+        cp ops.json server/ || true
+        cp whitelist.json server/ || true
+    
+    - name: Accept EULA
+      run: |
+        echo "eula=true" > server/eula.txt
+    
+    - name: Setup playit.gg tunnel
+      run: |
+        # Download playit.gg client
+        curl -L -o playit "https://github.com/playit-cloud/playit-agent/releases/download/latest/playit-linux-x86_64"
+        chmod +x playit
+        
+        # Start tunnel in background
+        ./playit --claim-token "${{ secrets.PLAYIT_TOKEN }}" &
+        PLAYIT_PID=$!
+        
+        # Wait for tunnel to be ready
+        sleep 10
+        
+        # Get tunnel info
+        TUNNEL_INFO=$(curl -s http://localhost:8080/api/v1/account)
+        echo "Tunnel info: $TUNNEL_INFO"
+        
+        # Save tunnel info for later use
+        echo "$TUNNEL_INFO" > tunnel_info.txt
+    
+    - name: Start Minecraft server
+      run: |
+        cd server
+        java -Xmx28G -Xms28G \
+          -XX:+UseG1GC \
+          -XX:MaxGCPauseMillis=200 \
+          -XX:+UnlockExperimentalVMOptions \
+          -XX:G1NewCollectionPercentage=30 \
+          -XX:G1MaxNewGenPercent=40 \
+          -XX:InitiatingHeapOccupancyPercent=35 \
+          -XX:+DisableExplicitGC \
+          -XX:+AlwaysPreTouch \
+          -XX:+ParallelRefProcEnabled \
+          -Dusing.aikars.flags=true \
+          -jar paper-1.21.jar nogui
+    
+    - name: Upload server logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: server-logs
+        path: server/logs/
+        retention-days: 7
+    
+    - name: Upload world backup
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: world-backup
+        path: world/
+        retention-days: 30
