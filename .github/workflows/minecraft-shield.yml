@@ -4,17 +4,16 @@ on:
   push:
     branches: [ main ]
   schedule:
-    # Reinicia a cada 12 horas para garantir estabilidade
     - cron: '0 */12 * * *'
   workflow_dispatch:
 
 jobs:
   minecraft-server-shield:
     runs-on: ubuntu-latest
-    timeout-minutes: 720  # 12 horas
+    timeout-minutes: 720
     
     steps:
-    - name: Checkout código
+    - name: Checkout codigo
       uses: actions/checkout@v4
     
     - name: Setup Java 21
@@ -23,7 +22,7 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
     
-    - name: Criar diretório do servidor
+    - name: Criar diretorio do servidor
       run: |
         mkdir -p ~/minecraft-server
         cd ~/minecraft-server
@@ -59,7 +58,7 @@ max-players=20
 pvp=true
 enable-command-blocks=true
 spawn-protection=0
-motd=§6Survivalcraft §e- §bSao Paulo, Brasil
+motd=Survivalcraft - Sao Paulo Brasil
 level-name=world
 level-seed=
 level-type=minecraft:normal
@@ -73,15 +72,11 @@ max-tick-time=60000
 EOF
         cat server.properties
     
-    - name: Executar Shield (Auto-Religamento)
+    - name: Executar Shield Auto-Religamento
       run: |
         cd ~/minecraft-server
-        
-        # Faz o script executável
         chmod +x shield.py
-        
-        # Executa o Shield
-        echo "🛡️ Iniciando Shield (Auto-Religamento)..."
+        echo "Iniciando Shield (Auto-Religamento)..."
         python3 shield.py
     
     - name: Upload logs em caso de erro
