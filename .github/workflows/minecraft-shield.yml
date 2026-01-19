@@ -38,45 +38,18 @@ jobs:
         cd ~/minecraft-server
         if [ ! -f paper-1.21.1.jar ]; then
           echo "Baixando Paper 1.21.1..."
-          curl -L -o paper-1.21.1.jar \
-            "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar" \
-            --progress-bar
+          curl -L -o paper-1.21.1.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
         fi
-        ls -lh paper-1.21.1.jar
     
     - name: Configurar server.properties
       run: |
         cd ~/minecraft-server
-        cat > server.properties << 'EOF'
-server-name=Survivalcraft
-server-port=25565
-server-ip=0.0.0.0
-online-mode=false
-gamemode=survival
-difficulty=2
-max-players=20
-pvp=true
-enable-command-blocks=true
-spawn-protection=0
-motd=Survivalcraft - Sao Paulo Brasil
-level-name=world
-level-seed=
-level-type=minecraft:normal
-enable-rcon=false
-query.port=25565
-enable-query=true
-view-distance=10
-simulation-distance=8
-network-compression-threshold=256
-max-tick-time=60000
-EOF
-        cat server.properties
+        printf "server-name=Survivalcraft\nserver-port=25565\nserver-ip=0.0.0.0\nonline-mode=false\ngamemode=survival\ndifficulty=2\nmax-players=20\npvp=true\nenable-command-blocks=true\nspawn-protection=0\nmotd=Survivalcraft - Sao Paulo Brasil\nlevel-name=world\nlevel-seed=\nlevel-type=minecraft:normal\nenable-rcon=false\nquery.port=25565\nenable-query=true\nview-distance=10\nsimulation-distance=8\nnetwork-compression-threshold=256\nmax-tick-time=60000\n" > server.properties
     
     - name: Executar Shield Auto-Religamento
       run: |
         cd ~/minecraft-server
         chmod +x shield.py
-        echo "Iniciando Shield (Auto-Religamento)..."
         python3 shield.py
     
     - name: Upload logs em caso de erro
