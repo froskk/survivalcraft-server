@@ -1,4 +1,4 @@
-name: Survivalcraft Server - Shield (Auto-Religamento)
+name: Survivalcraft Server - Shield
 
 on:
   push:
@@ -8,71 +8,31 @@ on:
   workflow_dispatch:
 
 jobs:
-  minecraft-server-shield:
+  minecraft-server:
     runs-on: ubuntu-latest
     timeout-minutes: 720
     
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     
-    - name: Setup Java 21
-      uses: actions/setup-java@v3
+    - uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '21'
     
-    - name: Create server directory
+    - name: Setup server
       run: |
-        mkdir -p ~/minecraft-server
-        cd ~/minecraft-server
+        mkdir -p ~/mc
+        cd ~/mc
         cp -r $GITHUB_WORKSPACE/* . 2>/dev/null || true
         echo "eula=true" > eula.txt
     
-    - name: Download Paper 1.21.1
+    - name: Download Paper
       run: |
-        cd ~/minecraft-server
-        if [ ! -f paper-1.21.1.jar ]; then
-          curl -L -o paper-1.21.1.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
-        fi
-        ls -lh paper-1.21.1.jar
+        cd ~/mc
+        curl -L -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
     
-    - name: Start Shield Watchdog
+    - name: Run server
       run: |
-        cd ~/minecraft-server
-        python3 << 'PYTHON_EOF'
-import subprocess
-import time
-import sys
-
-max_retries = 5
-retry_count = 0
-
-while retry_count < max_retries:
-    try:
-        print(f"[Shield] Attempt {retry_count + 1}/{max_retries}")
-        proc = subprocess.Popen(
-            ["java", "-Xmx2G", "-Xms2G", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=200", 
-             "-XX:+UnlockExperimentalVMOptions", "-XX:G1NewCollectionPercentage=30", 
-             "-XX:G1MaxNewGenPercent=40", "-XX:G1HeapRegionSize=8M", "-XX:G1HeapWastePercent=5", 
-             "-XX:G1MixedGCCountTarget=4", "-XX:InitiatingHeapOccupancyPercent=15", 
-             "-XX:G1MixedGCLiveThresholdPercent=90", "-XX:G1RSetUpdatingPauseTimePercent=5", 
-             "-XX:SurvivorRatio=32", "-XX:+PerfDisableSharedMem", "-XX:MaxTenuringThreshold=1", 
-             "-Dcom.mojang.eula.agree=true", "-jar", "paper-1.21.1.jar", "nogui"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        
-        print("[Shield] Server started")
-        proc.wait()
-        print("[Shield] Server stopped")
-        retry_count += 1
-        time.sleep(5)
-        
-    except Exception as e:
-        print(f"[Shield] Error: {e}")
-        retry_count += 1
-        time.sleep(5)
-
-print("[Shield] Max retries reached")
-PYTHON_EOF
+        cd ~/mc
+        java -Xmx2G -Xms2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -jar paper.jar nogui
