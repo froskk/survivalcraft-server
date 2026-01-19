@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 720
     
     steps:
-    - name: Checkout codigo
+    - name: Checkout
       uses: actions/checkout@v4
     
     - name: Setup Java 21
@@ -22,40 +22,57 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
     
-    - name: Criar diretorio do servidor
+    - name: Create server directory
       run: |
         mkdir -p ~/minecraft-server
         cd ~/minecraft-server
         cp -r $GITHUB_WORKSPACE/* . 2>/dev/null || true
-    
-    - name: Aceitar EULA
-      run: |
-        cd ~/minecraft-server
         echo "eula=true" > eula.txt
     
-    - name: Baixar Paper 1.21.1
+    - name: Download Paper 1.21.1
       run: |
         cd ~/minecraft-server
         if [ ! -f paper-1.21.1.jar ]; then
-          echo "Baixando Paper 1.21.1..."
           curl -L -o paper-1.21.1.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/128/downloads/paper-1.21.1-128.jar"
         fi
+        ls -lh paper-1.21.1.jar
     
-    - name: Configurar server.properties
+    - name: Start Shield Watchdog
       run: |
         cd ~/minecraft-server
-        printf "server-name=Survivalcraft\nserver-port=25565\nserver-ip=0.0.0.0\nonline-mode=false\ngamemode=survival\ndifficulty=2\nmax-players=20\npvp=true\nenable-command-blocks=true\nspawn-protection=0\nmotd=Survivalcraft - Sao Paulo Brasil\nlevel-name=world\nlevel-seed=\nlevel-type=minecraft:normal\nenable-rcon=false\nquery.port=25565\nenable-query=true\nview-distance=10\nsimulation-distance=8\nnetwork-compression-threshold=256\nmax-tick-time=60000\n" > server.properties
-    
-    - name: Executar Shield Auto-Religamento
-      run: |
-        cd ~/minecraft-server
-        chmod +x shield.py
-        python3 shield.py
-    
-    - name: Upload logs em caso de erro
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: server-shield-logs
-        path: ~/minecraft-server/*.log
-        retention-days: 7
+        python3 << 'PYTHON_EOF'
+import subprocess
+import time
+import sys
+
+max_retries = 5
+retry_count = 0
+
+while retry_count < max_retries:
+    try:
+        print(f"[Shield] Attempt {retry_count + 1}/{max_retries}")
+        proc = subprocess.Popen(
+            ["java", "-Xmx2G", "-Xms2G", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=200", 
+             "-XX:+UnlockExperimentalVMOptions", "-XX:G1NewCollectionPercentage=30", 
+             "-XX:G1MaxNewGenPercent=40", "-XX:G1HeapRegionSize=8M", "-XX:G1HeapWastePercent=5", 
+             "-XX:G1MixedGCCountTarget=4", "-XX:InitiatingHeapOccupancyPercent=15", 
+             "-XX:G1MixedGCLiveThresholdPercent=90", "-XX:G1RSetUpdatingPauseTimePercent=5", 
+             "-XX:SurvivorRatio=32", "-XX:+PerfDisableSharedMem", "-XX:MaxTenuringThreshold=1", 
+             "-Dcom.mojang.eula.agree=true", "-jar", "paper-1.21.1.jar", "nogui"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        
+        print("[Shield] Server started")
+        proc.wait()
+        print("[Shield] Server stopped")
+        retry_count += 1
+        time.sleep(5)
+        
+    except Exception as e:
+        print(f"[Shield] Error: {e}")
+        retry_count += 1
+        time.sleep(5)
+
+print("[Shield] Max retries reached")
+PYTHON_EOF
