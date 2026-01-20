@@ -1,0 +1,12 @@
+# Configuração do HeadDrop
+# Este arquivo será criado na primeira execução, mas o colocamos aqui para garantir a presença.
+# O plugin HeadDrop-1.0.0.jar será baixado automaticamente pelo install.sh
+
+# Porcentagem de chance de um jogador dropar a cabeça ao morrer
+drop-chance: 100
+
+# Mensagem exibida quando a cabeça é dropada
+drop-message: "&a%player% dropou a cabeça de %victim%!"
+
+# Se deve dropar a cabeça apenas em mortes por jogador
+player-kills-only: true
