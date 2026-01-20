@@ -1,7 +1,13 @@
 [
   {
-    "uuid": "00000000-0000-0000-0000-000000000000",
+    "uuid": "00000000-0000-0000-0000-000000000001",
     "name": "N0vakt",
+    "level": 4,
+    "bypassesPlayerLimit": true
+  },
+  {
+    "uuid": "00000000-0000-0000-0000-000000000002",
+    "name": "froskk",
     "level": 4,
     "bypassesPlayerLimit": true
   }

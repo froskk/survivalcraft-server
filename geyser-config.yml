@@ -1,0 +1,18 @@
+bedrock:
+  port: 19132
+  bind-address: "0.0.0.0"
+  compression: 6
+  frame-codec-enabled: true
+
+remote:
+  address: "localhost"
+  port: 25565
+  auth-type: "offline"
+
+floodgate:
+  enable: true
+  username-prefix: ""
+  replace-usernames: false
+
+debug: false
+notify-on-new-bedrock-update: false
